@@ -1,0 +1,31 @@
+
+[
+  {
+    "id": 101,
+    "title": "System unavailable",
+    "severity": "high",
+    "status": "open"
+  },
+  {
+    "id": 102,
+    "title": "Incorrect report generated",
+    "severity": "medium",
+    "status": "closed"
+  },
+  {
+    "id": 103,
+    "title": "Slow API response",
+    "severity": "low"
+  },
+  {
+    "id": 104,
+    "title": "Database connection failed",
+    "severity": "high",
+    "status": "open"
+  },
+  {
+    "id": 105,
+    "title": "Delayed notification",
+    "status": "open"
+  }
+]
