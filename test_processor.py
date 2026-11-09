@@ -2,6 +2,7 @@ from incident_processor import (
     get_missing_fields,
     validate_all_fields,
     filter_incidents,
+    get_severity_count
 )
 
 def test_missing_fields():
@@ -54,6 +55,18 @@ def test_severity_filtering():
     ids = [incident['id'] for incident in result]
     assert 402 not in ids
     print("Severity filtering test passed")
+
+def test_get_severity_count():
+    incidents = [
+        {"id": 401, "severity": "high"},
+        {"id": 402, "severity": "high"},
+        {"id": 403, "severity": "high"},
+        {"id": 404},
+    ]
+
+    result = get_severity_count(incidents)
+    assert result == {"high": 3}
+    print("Severity count test passed")
 
 
 if __name__ == "__main__":
