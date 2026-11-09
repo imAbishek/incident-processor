@@ -1,204 +1,130 @@
 # Incident Data Processor
 
-## Overview
+A Python-based incident processing application with a **CLI and FastAPI REST API**. It loads incident records from JSON, validates data, filters incidents by severity, and generates summary statistics.
 
-Incident Data Processor is a Python command-line application that loads incident records from a JSON file, validates required fields, and filters incidents based on severity.
+Built as a hands-on backend engineering project covering Python, FastAPI, Pydantic, HTTP handling, and automated testing.
 
-The project was built as part of a practical Python learning sprint to understand JSON handling, functions, modules, exception handling, HTTP requests, and automated testing.
+## Features
+
+- **Incident Processing:** Load JSON records, detect missing fields, filter by severity, and calculate severity counts.
+- **CLI:** Process incidents locally and display validation errors and high-severity incidents.
+- **REST API:** Retrieve incidents, filter by severity, view summaries, and validate submitted incident data.
+- **Pydantic Validation:** Validate request bodies and enforce response schemas.
+- **Error Handling:** Handle file errors, malformed JSON, HTTP failures, timeouts, and invalid API requests.
+- **Automated Testing:** 10 pytest tests covering incident processing, API endpoints, and Pydantic validation.
+
+## Tech Stack
+
+Python 3.11+ · FastAPI · Pydantic · pytest · HTTPX · Requests
 
 ## Project Structure
 
 ```text
 incident-processor/
-├── main.py
-├── file_loader.py
-├── incident_processor.py
-├── api_client.py
-├── incidents.json
-├── test_processor.py
-├── slow_server.py
+├── api.py                 # FastAPI endpoints
+├── schemas.py             # Pydantic models
+├── main.py                # CLI entry point
+├── incident_processor.py  # Processing and validation logic
+├── file_loader.py         # JSON loading and error handling
+├── api_client.py          # Standalone HTTP client example
+├── incidents.json         # Sample incident data
+├── test_api.py            # API endpoint tests
+├── test_processor.py      # Processing tests
+├── test_schemas.py        # Pydantic validation tests
+├── slow_server.py         # Local timeout testing utility
 └── README.md
 ```
 
-### Module Responsibilities
+## Getting Started
 
-- **main.py** — Entry point of the application. Coordinates loading, validation, filtering, and displaying results.
-- **file_loader.py** — Loads JSON files and handles file-not-found and invalid JSON errors.
-- **incident_processor.py** — Contains reusable functions for filtering incidents, checking missing fields, and validating multiple records.
-- **api_client.py** — Demonstrates HTTP GET requests, JSON response parsing, timeouts, and connection error handling. This module is currently separate from the main incident-processing workflow.
-- **incidents.json** — Contains sample incident records used by the application.
-- **test_processor.py** — Contains assertion-based tests for validation and filtering.
-- **slow_server.py** — A temporary local HTTP server used to test request timeout handling.
-
-## Features
-
-### 1. JSON File Loading
-- Loads incident records from `incidents.json`.
-- Handles missing files using `FileNotFoundError`.
-- Handles malformed JSON using `JSONDecodeError`.
-
-### 2. Incident Validation
-- Checks whether incidents contain four required fields:
-  - `id`
-  - `title`
-  - `severity`
-  - `status`
-- Reports missing fields along with their incident IDs.
-- Supports validating multiple incident records.
-
-### 3. Severity Filtering
-- Filters incident records based on severity.
-- Displays high-severity incidents with their IDs and titles.
-- Excludes records missing required fields before filtering.
-- Continues processing valid records even when other incidents are invalid.
-
-### 4. HTTP Integration
-- Fetches JSON data from a public API using Python's `requests` library.
-- Checks HTTP response status using `raise_for_status()`.
-- Handles HTTP errors, request timeouts, and connection failures.
-- Returns parsed JSON data when the request succeeds.
-
-### 5. Automated Tests
-- Uses Python assertions to verify expected results.
-- Tests individual incident validation.
-- Tests batch validation.
-- Tests severity filtering and record exclusion.
-
-## Requirements
-
-- Python 3.11 or later
-- `requests` library for the optional HTTP integration
-
-## How to Run
-
-### 1. Navigate to the project directory
+**1. Clone the repository**
 
 ```bash
+git clone https://github.com/imAbishek/incident-processor.git
 cd incident-processor
 ```
 
-### 2. Create and activate a virtual environment (if needed)
+**2. Create and activate a virtual environment**
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install the HTTP client dependency
+**3. Install dependencies**
 
 ```bash
-python -m pip install requests
+python -m pip install "fastapi[standard]" requests pytest httpx
 ```
 
-### 4. Run the Incident Processor
+**4. Run the CLI**
 
 ```bash
 python main.py
 ```
 
-The program loads `incidents.json`, checks the records for missing fields, and displays the high-severity incidents found among valid records.
-
-## Example Output
-
-```text
-=== Incident Data Processor ===
-3
-Incident: 103 | Missing Fields: ['status']
-=== High Severity Data Processor ===
-ID: 101 | System unavailable
-```
-
-This output illustrates a dataset containing three records, one of which is missing its `status` field.
-
-## Testing
-
-Run the existing tests using:
+**5. Run the FastAPI server**
 
 ```bash
-python test_processor.py
+fastapi dev api.py
 ```
 
-Expected output:
+Interactive API documentation: http://127.0.0.1:8000/docs
 
-```text
-Missing-field test passed
-Batch-validation test passed
-Severity filtering test passed
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/incidents` | Retrieve all incident records |
+| GET | `/incidents?severity=high` | Filter incidents by severity |
+| GET | `/incidents/summary` | Get total incidents and severity counts |
+| POST | `/incidents` | Validate and return submitted incident data |
+
+**Example — GET `/incidents/summary`**
+
+```json
+{
+  "total_incidents": 5,
+  "severity_count": {
+    "high": 2,
+    "medium": 1,
+    "low": 1
+  }
+}
 ```
 
-The tests use Python's built-in `assert` statement.
+**POST `/incidents`** validates incoming JSON against the Pydantic `Incident` schema. Valid submissions return HTTP 200, while invalid request bodies return HTTP 422.
 
-If an assertion fails, Python raises an `AssertionError`, helping identify unexpected behavior.
+Note: POST currently validates and returns data without persisting it.
 
-### Test Coverage
+## Automated Tests
 
-| Test | Purpose |
-|---|---|
-| `test_missing_fields()` | Verifies that missing required fields are detected |
-| `test_batch_validation()` | Verifies error count, incident ID, and missing fields for multiple records |
-| `test_severity_filtering()` | Verifies that only incidents with the requested severity are returned |
+Run the complete test suite:
 
-## Error Handling
-
-### Missing JSON File
-
-If the requested file does not exist, the loader catches `FileNotFoundError` and returns `None`.
-
-The main application detects this failure and displays:
-
-```text
-File not found
-Cannot process incidents
+```bash
+python -m pytest -q
 ```
 
-### Invalid JSON
+Current test coverage:
 
-If the JSON file contains invalid syntax, the loader catches `JSONDecodeError` and returns `None`.
-
-The application prevents further incident processing.
-
-### Missing Incident Fields
-
-If an incident is missing required fields, the program reports the incident ID and missing fields.
-
-For example:
-
-```text
-Incident: 103 | Missing Fields: ['status']
-```
-
-The invalid record is excluded from severity filtering, while other valid incidents continue to be processed.
-
-### HTTP Request Errors
-
-The HTTP client handles:
-- `HTTPError` — An HTTP error response detected by `raise_for_status()`.
-- `Timeout` — A network operation exceeds its configured timeout.
-- `ConnectionError` — A connection cannot be established or is disrupted.
-
-The client returns `None` when one of these handled request failures occurs.
+| Test file | Tests | Coverage |
+|---|---:|---|
+| `test_processor.py` | 4 | Field validation, filtering, severity counting |
+| `test_api.py` | 4 | GET endpoints, filtering, POST validation |
+| `test_schemas.py` | 2 | Valid and invalid Pydantic models |
+| **Total** | **10** | **All passing** |
 
 ## Current Limitations
 
-- Input validation checks the presence of required fields, not their data types or allowed values.
-- The application expects a JSON list containing incident dictionaries.
-- Incident severity filtering is currently fixed to `high` in the CLI.
-- HTTP integration is implemented separately and is not connected to the incident-processing pipeline.
-- The project uses basic assertion-based tests rather than a dedicated testing framework.
+- Incident records are loaded from a local JSON file; no database is integrated.
+- POST requests validate data but do not save new incidents.
+- The CLI checks required-field presence; Pydantic provides type validation for API requests.
+- Tests use synthetic data, and some API tests depend on the existing JSON fixture.
+- The standalone HTTP client is not integrated into the incident-processing pipeline.
 
-## Future Improvements
+## Project Progress
 
-The next development stage is to convert the existing Incident Data Processor into a REST API using FastAPI.
+- **Week 1 — Python Essentials:** JSON processing, validation, reusable functions, HTTP error handling, CLI integration, and testing.
+- **Week 2 — FastAPI Fundamentals:** REST endpoints, query parameters, Pydantic schemas, response contracts, refactoring, and automated API testing.
 
-Planned improvements include:
-
-- API endpoints for accessing and filtering incidents.
-- Request and response validation using Pydantic.
-- Automated endpoint testing using pytest.
-- Improved error responses and input validation.
-
-## Project Status
-
-**Week 1 — Python Essentials Sprint: Core implementation and tests completed.**
-
-The project demonstrates practical Python fundamentals through a small, modular, working application.
+**Status:** Week 2 implementation complete

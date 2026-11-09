@@ -1,7 +1,7 @@
 from incident_processor import (
     validate_all_fields,
     filter_incidents,
-    get_missing_fields,
+    get_valid_incidents
 )
 from file_loader import load_incidents
 
@@ -13,7 +13,6 @@ if incidents is not None:
     print(len(incidents))
 
     result = validate_all_fields(incidents)
-    valid_incidents = []
 
     if result:
         for incident in result:
@@ -22,12 +21,7 @@ if incidents is not None:
     else:
         print("All incidents are valid")
 
-    for incident in incidents:
-        missing_fields = get_missing_fields(incident)
-        if missing_fields:
-            continue
-        else:
-            valid_incidents.append(incident)
+    valid_incidents = get_valid_incidents(incidents)
 
     high_severity =  filter_incidents(valid_incidents, "high")
 
